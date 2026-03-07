@@ -91,7 +91,9 @@ The VID Methodology is organized as individual chapters for optimal accessibilit
 
 ## For AI Assistants
 
-This book is designed to be accessible to AI coding assistants through its modular structure:
+**Start here: [`llms.txt`](llms.txt)** — A self-contained, AI-friendly summary of the entire VID methodology. Covers principles, risk scoring, verification checklists, behavioral instructions, verification toolkit, test verification, and patterns/anti-patterns. No link-following needed.
+
+This book is also accessible through its modular chapter structure:
 
 **Context-Aware Loading**
 - Load individual chapters as needed to fit within context windows
