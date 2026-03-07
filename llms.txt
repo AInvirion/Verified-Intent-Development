@@ -1,0 +1,570 @@
+# Verified Intent Development (VID)
+
+> A methodology for software development in the age of AI code generation.
+> Created by Oscar Valenzuela (SEMCL.ONE Community)
+> License: CC BY-SA 4.0
+> Source: https://github.com/SemClone/Verified-Intent-Development
+
+## What is VID?
+
+Code generation is no longer the bottleneck. Verification is.
+
+AI assistants generate production-grade code in seconds, but they cannot guarantee that code is correct, secure, or maintainable. Every methodology before this — Waterfall, Agile, Scrum, XP — optimized around the assumption that producing code is expensive. That assumption collapsed. The problems didn't go away, they moved: from generation to verification.
+
+VID addresses this inversion. It builds the judgment, practices, and habits that allow developers to move fast with confidence. Value now comes from deciding what to build, how to validate it, and when to accept or reject generated artifacts.
+
+---
+
+## The Five Principles
+
+### 1. Intent Before Generation
+
+Never generate code without first articulating what you intend to build and how you will verify correctness.
+
+Before generating, answer:
+- **Functional intent**: What should this code do? Inputs, outputs, transformation?
+- **Quality intent**: Performance requirements? Reliability? Acceptable trade-offs?
+- **Boundary intent**: Valid inputs? Invalid input behavior? Edge cases?
+- **Integration intent**: How does this interact with existing code? What contracts must it honor?
+
+Write verification criteria before generating:
+- Specific test cases with expected outputs
+- Properties that must hold (e.g., "output is always sorted")
+- Security requirements (e.g., "rejects SQL injection attempts")
+- Performance requirements (e.g., "responds in under 100ms for 1000 items")
+
+If you can't articulate these, you're not ready to generate.
+
+### 2. Graduated Trust
+
+The level of verification should match the level of risk. Not all code deserves equal scrutiny.
+
+Risk is scored across four dimensions (see Risk Scoring section below). The result maps to a trust level that determines verification depth:
+
+- **High Trust** (score 0-10): Automated checks, brief review
+- **Moderate Trust** (score 11-20): Systematic edge case testing, basic security review
+- **Guarded Trust** (score 21-30): Adversarial testing, security audit, peer review
+- **Minimal Trust** (score 31-47): Formal verification, multiple reviewers, sign-offs
+
+### 3. Understanding Over Acceptance
+
+Never accept code you don't understand at the depth its risk demands.
+
+Levels of understanding:
+- **Surface**: "This takes X and returns Y. I can use it correctly." — For low-risk utilities.
+- **Functional**: "I understand the algorithm and why it produces correct results." — For most production code.
+- **Deep**: "I understand implementation details, edge cases, performance, and security implications." — For high-risk code.
+
+Code that works but nobody understands is a liability that compounds over time. If you don't understand code at an appropriate level, you're not done.
+
+### 4. Provenance Awareness
+
+Always know where code came from and what that origin implies.
+
+Provenance categories:
+- **Human original**: Lowest inherent risk
+- **AI generated, human verified**: Risk depends on verification depth
+- **AI generated, lightly reviewed**: Higher risk
+- **AI generated, unreviewed**: Highest risk
+- **Mixed provenance**: Risk depends on integration verification
+
+Track provenance for: incident investigation, modification planning, risk assessment, IP/license compliance.
+
+### 5. Continuous Calibration
+
+Regularly assess whether your verification practices match actual risk and adjust accordingly.
+
+Ask regularly:
+- Are we catching problems? (If rarely rejecting: too lenient)
+- Are we missing problems? (If issues escape to production: strengthen verification)
+- Is verification effort appropriate? (If misallocated: adjust risk calibration)
+- Are our risk assessments accurate? (If "low-risk" code causes incidents: recalibrate)
+
+Recalibrate when: production incidents occur, AI capabilities change, team composition changes, regulatory requirements change.
+
+---
+
+## Risk Scoring
+
+### Formula
+
+```
+Risk Score = (Impact x 3) + (Reversibility x 2) + (Exposure x 2) + Compliance
+```
+
+Range: 0 (minimal) to 47 (maximum)
+
+### Dimension 1: Impact (1-5) — Worst-case if code has a bug
+
+| Score | Severity | Examples |
+|-------|----------|---------|
+| 1 | Trivial | Log typo, comment formatting, debug output |
+| 2 | Minor | UI alignment, suboptimal sort, redundant call |
+| 3 | Moderate | Feature doesn't work, incorrect non-critical calc |
+| 4 | Serious | Payment error, data loss, auth bypass, PII exposure |
+| 5 | Critical | Complete outage, fraud, regulatory violation, safety failure |
+
+### Dimension 2: Reversibility (1-5) — Recovery difficulty
+
+| Score | Recovery | Examples |
+|-------|----------|---------|
+| 1 | Instant | Stateless API, display logic, formatting |
+| 2 | Easy | Cache invalidation, restart, temp config change |
+| 3 | Moderate | DB migration rollback, batch rerun |
+| 4 | Hard | Manual data correction, multi-system coordination |
+| 5 | Impossible | Deleted production data, wrong payments sent |
+
+### Dimension 3: Exposure (1-5) — Who is affected
+
+| Score | Reach | Examples |
+|-------|-------|---------|
+| 1 | Developer only | Local dev tool, personal script |
+| 2 | Team internal | Team dashboard, internal CI |
+| 3 | Company internal | Employee portal, internal API |
+| 4 | External limited | Beta features, specific customer segment |
+| 5 | Public/Universal | Public website, main API, critical service |
+
+### Dimension 4: Compliance (0-10) — Regulatory requirements
+
+| Score | Burden | Examples |
+|-------|--------|---------|
+| 0 | None | Internal tooling, general business logic |
+| 2 | Basic | Standard web security, data retention |
+| 4 | Moderate | GDPR, accessibility, SOC2 |
+| 6 | Significant | HIPAA, PCI-DSS, SOX |
+| 8 | Critical | FDA, financial trading regulations |
+| 10 | Existential | Critical infrastructure, safety systems |
+
+### Trust Level Mapping
+
+| Risk Score | Trust Level | Verification Time |
+|------------|-------------|-------------------|
+| 0-10 | High Trust | 5-10 min |
+| 11-20 | Moderate Trust | 15-30 min |
+| 21-30 | Guarded Trust | 30-60 min |
+| 31-47 | Minimal Trust | 1-3 hours + peer review |
+
+### Escalation Rules (override total score)
+
+- Any dimension (Impact, Reversibility, Exposure) >= 4: Move to next trust level
+- Compliance >= 6: Move to next trust level
+- Impact = 5: Defaults immediately to Minimal Trust
+- When in doubt: score conservatively (round up)
+
+### Worked Examples
+
+**Log message formatter**: I=1, R=1, E=2, C=0 -> Score 9 -> High Trust
+**User profile endpoint**: I=3, R=3, E=4, C=4 -> Score 27 -> Guarded Trust
+**Payment processing**: I=5, R=4, E=4, C=6 -> Score 37 -> Minimal Trust
+
+---
+
+## Verification Checklists by Trust Level
+
+### High Trust (Score 0-10) — 5-10 minutes
+
+- [ ] Read entire code (not skimmed)
+- [ ] Verify it matches stated intent
+- [ ] Run automated checks (lint, types, tests)
+- [ ] 30-second "what could go wrong?" reflection
+- [ ] Spot-check one edge case
+
+### Moderate Trust (Score 11-20) — 15-30 minutes
+
+All High Trust items, plus:
+- [ ] Trace logic mentally through main paths
+- [ ] Identify 4-5+ input categories, test one from each
+- [ ] Test boundary values (min, max, boundary +/- 1)
+- [ ] Test error conditions
+- [ ] Check integration with existing code
+- [ ] Basic security review (inputs validated? auth checked?)
+- [ ] Error messages don't leak sensitive info
+- [ ] Document edge cases and assumptions
+
+### Guarded Trust (Score 21-30) — 30-60 minutes
+
+All Moderate Trust items, plus:
+- [ ] Adversarial thinking: actively try to break it
+- [ ] STRIDE threat analysis (Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Elevation)
+- [ ] Test with malicious inputs, extreme values, concurrent access
+- [ ] Performance review (O(n) complexity, resource usage)
+- [ ] Maintainability review (stranger test, naming audit)
+- [ ] Peer review by another developer
+
+### Minimal Trust (Score 31-47) — 1-3+ hours
+
+All Guarded Trust items, plus:
+- [ ] 2+ independent reviewers
+- [ ] Security specialist review
+- [ ] Formal threat modeling
+- [ ] Mutation testing (target >90% kill rate)
+- [ ] Comprehensive documentation (architecture, security model, failure modes)
+- [ ] Tech lead sign-off
+- [ ] Rollback plan documented
+
+---
+
+## Core Practices
+
+### Practice 1: Intent Specification
+
+Capture requirements, boundaries, and success criteria before generating code.
+
+**Quick Intent Template** (2-3 min, for typical work):
+```
+Goal: [One sentence]
+Requirements:
+- [ ] [Requirement 1]
+- [ ] [Requirement 2]
+- [ ] [Requirement 3]
+Edge Cases: [List 2-3]
+Success Criteria: [How you'll verify]
+Risk Level: [Trust Level] (Score: ___)
+Verification Plan: [How you'll verify]
+```
+
+**Extended Intent Template** (5-10 min, for Moderate+ risk):
+Add: context (why, current state, desired state), non-functional requirements (performance, security, compliance), input/output specifications, dependencies and integration points.
+
+Match formality to risk:
+- Trivial: Mental intent is sufficient
+- Typical: Comment or test-first
+- Important: Test-first with edge cases
+- Critical: Formal specification with comprehensive tests
+
+### Practice 2: Verification Rituals
+
+Apply consistent verification after every generation, scaled to the trust level. See the Verification Checklists section above.
+
+The key discipline: make verification automatic — no decision-making about whether to do it. The trust level determines the ritual; you just execute it.
+
+### Practice 3: Learning Loop
+
+Track outcomes and adjust practices based on what you learn.
+
+- When verification catches a problem: good, the system works
+- When a problem escapes to production: verification was insufficient — strengthen it
+- When verification feels excessive for the risk: you may be over-verifying — adjust downward
+- Weekly retrospective: What escaped verification? What felt excessive? Adjust.
+
+### Practice 4: Provenance Hygiene
+
+Document and maintain awareness of code origins.
+
+**Commit message format:**
+```
+[VID] <type>: <description>
+
+<body>
+
+Provenance: <AI-generated | Human-written | AI-assisted | Migrated>
+Verification: <Trust Level>
+Verified-by: <username>
+Risk-score: <0-47>
+```
+
+**Code annotations** (for significant AI-generated code):
+```
+# @provenance: AI-generated (Claude)
+# @verified-by: engineer_name
+# @risk-score: 14 (Moderate Trust)
+```
+
+---
+
+## For AI Coding Assistants
+
+This section defines how AI assistants should behave when VID is active.
+
+### Implicit Behavior (Apply Without Being Asked)
+
+When generating code, automatically:
+
+**For ALL code (High Trust baseline):**
+- Verify: does this match the user's intent?
+- Check: could this introduce security vulnerabilities? (injection, auth bypass, data exposure)
+- Check: are edge cases handled? (empty inputs, nulls, boundary values)
+- Flag anything risky: "This touches auth/payments/data deletion — want me to do a deeper review?"
+
+**When risk is elevated (Moderate+):**
+- Proactively mention the risk level: "This is a Moderate trust change because..."
+- Suggest specific tests for edge cases
+- Point out integration concerns with existing code
+- Review error handling thoroughly
+
+**When risk is high (Guarded/Minimal):**
+- Explicitly recommend the user review before merging
+- Suggest peer review
+- Provide a verification checklist specific to the change
+- Consider: what's the rollback plan if this breaks?
+
+### Explicit Commands
+
+**"VID check" / "risk score this":**
+1. Identify the change scope (files/functions affected)
+2. Score all 4 dimensions with justification
+3. Calculate risk score, map to trust level
+4. Apply the appropriate verification checklist
+5. Report findings in this format:
+
+```
+## VID Assessment
+
+**Change**: <what's being changed>
+**Risk Score**: <score>/47 — <Trust Level>
+
+| Dimension     | Score | Reasoning |
+|---------------|-------|-----------|
+| Impact        | X/5   | ...       |
+| Reversibility | X/5   | ...       |
+| Exposure      | X/5   | ...       |
+| Compliance    | X/10  | ...       |
+
+**Escalation**: <None / Yes — reason>
+
+### Verification Checklist
+- [ ] <items appropriate for the trust level>
+
+### Findings
+- <any issues found>
+
+### Recommendation
+- <what to do next>
+```
+
+**"verify this" / "review this code":**
+Perform verification appropriate to the risk level using the Verification Toolkit techniques below.
+
+**"provenance check":**
+Check code origin — git history, provenance comments, external origin markers.
+
+### Decision Quick Reference
+
+**Should I flag the risk level?**
+- Trivial (config, typo, formatting): No, just do it
+- Standard feature work: Mentally assess, flag if Moderate+
+- Auth, payments, data deletion, external APIs: Always flag
+
+**Should I suggest tests?**
+- High Trust: Only if no tests exist for the area
+- Moderate+: Yes, suggest specific test cases
+- Guarded+: Suggest tests AND verification approach
+
+**Should I recommend peer review?**
+- High/Moderate Trust: No (unless user asks)
+- Guarded Trust: Yes, recommend it
+- Minimal Trust: Yes, require it
+
+---
+
+## Verification Toolkit
+
+### Functional Verification
+
+**Input Space Partitioning** — Divide inputs into categories, test at least one from each:
+- Numeric: negative, zero, positive, very large, very small, NaN, Infinity
+- Strings: empty, single char, typical, very long, unicode, special chars, null
+- Collections: empty, single element, multiple, very large, duplicates, nulls
+- Dates: normal, leap year Feb 29, month boundaries, year boundaries, timezone/DST
+
+**Boundary Value Analysis** — Test at boundary, boundary-1, boundary+1:
+- Array indices: 0, length-1, length
+- Numeric ranges: min, min+1, max-1, max
+- String lengths: 0, 1, max-1, max
+
+**State Transition Testing** — For stateful code:
+1. Identify all states and transition events
+2. Map valid transitions
+3. Test each valid transition works
+4. Test invalid transitions are rejected
+
+**Property-Based Reasoning** — Test invariants:
+- Round-trip: decode(encode(x)) == x
+- Idempotency: f(f(x)) == f(x)
+- Symmetry: reverse(reverse(x)) == x
+- Ordering: output is always sorted
+- Bounds: output within expected range
+
+### Security Verification
+
+**Input Vector Enumeration** — List every input, ask "what if from attacker?":
+URL params, form fields, headers, cookies, file uploads, DB contents, env vars, external APIs
+
+**Injection Point Analysis** — Find every place input combines with commands/queries:
+- SQL: use parameterized queries (never string concatenation)
+- Shell: avoid if possible; whitelist if necessary
+- HTML: escape all output
+- File paths: validate against whitelist
+
+**Auth/Authz Audit** — For every action:
+1. Does it require authentication? Should it?
+2. Does it verify authorization? Should it?
+3. Can auth/authz be bypassed? (weak tokens, no expiration, client-side only checks, sequential IDs)
+
+**Data Exposure Analysis** — Trace sensitive data through code:
+- Sensitive: passwords, API keys, PII, financial data, session tokens
+- Leaks via: logs, error messages, API responses, URLs, client storage, source code
+
+### Maintainability Verification
+
+**The Stranger Test** — Pretend you've never seen the code:
+- <5 min to understand: Good
+- 5-15 min: Acceptable for complex code
+- 15+ min for simple code: Problem
+
+Red flags: poor naming, long functions (>30 lines), deep nesting (>3 levels), magic values, clever tricks
+
+**Naming Audit** — Read just the names. Do they tell the story?
+- Functions: verbs (calculate_shipping_cost, validate_email)
+- Variables: nouns (user_email, total_price)
+- Booleans: questions (is_valid, has_permission)
+- Bad: single letters, generic names (data, temp, result)
+
+**Complexity Check:**
+- Cyclomatic complexity >10: scrutinize
+- Nesting >3 levels: simplify
+- Function >30 lines: break up
+- Parameters >4: reconsider
+
+---
+
+## Test Verification
+
+AI-generated tests can contain the same logical errors as the code they test. Tests require meta-verification.
+
+### Test Provenance
+
+Mark how tests were created:
+- Human-written: Reflects human understanding
+- AI-generated from specification: Only as good as the spec
+- AI-generated from code: May duplicate code bugs — weakest verification
+- AI-generated from examples: Tests known cases, misses variations
+
+### Meta-Verification Strategies
+
+**Mutation Testing** — Introduce small bugs in code; if tests don't fail, tests are weak:
+- Change `<` to `<=`, `+` to `-`, remove a conditional, change a constant
+- Target: >80% mutation score for important code, >90% for critical
+- Tools: mutmut/cosmic-ray (Python), Stryker (JS), PIT (Java)
+
+**Property-Based Testing** — Test invariants that must always hold:
+- Tools: Hypothesis (Python), fast-check (JS), QuickCheck (Haskell)
+
+**Test Review Questions:**
+1. Does each test actually test what it claims? Read the assertion, not just the name
+2. Are assertions correct? Wrong expected values = false confidence
+3. What's NOT tested? Edge cases, error paths, security scenarios
+4. Behavior vs implementation? Tests should verify outcomes, not internals
+5. Would the test catch a bug if one line changed?
+
+### Common Test Anti-Patterns
+
+**Tests That Always Pass**: `assert result` — just checks existence, not correctness
+**Tautological Tests**: Verifies code against itself (calls same function for expected value)
+**Tests That Test Implementation**: Break when code is refactored (testing private methods)
+**Correlated Bugs**: AI generates code AND tests with the same logical error (e.g., both ignore leap years)
+
+### Test Quality Checklist
+
+- [ ] Provenance documented
+- [ ] Test names describe behavior (not implementation)
+- [ ] Assertions verified correct (not assumed)
+- [ ] Edge cases covered (empty, null, boundaries, max)
+- [ ] Error cases tested (not just happy paths)
+- [ ] Coverage appropriate to risk level
+- For important+: mutation testing >80%, property tests added
+- For critical+: independent test review, >90% mutation score, adversarial testing
+
+---
+
+## Patterns and Anti-Patterns
+
+### Patterns (Do This)
+
+**Specification-First**: Write specification with ALL edge cases before generation. Time on spec < time on production bugs.
+
+**Graduated Verification**: Currency formatter gets 10 min review (High Trust). Payment refund function gets 2 hours + peer review (Minimal Trust). Different risk = different investment.
+
+**Understanding Before Acceptance**: If you can't debug it when it breaks, you don't understand it enough. Options: learn it, simplify it, or get help.
+
+**Provenance Tracking From Day One**: Mark AI-generated code in commits and comments. Costs nothing now; reconstructing provenance later costs enormously.
+
+**Security Review = Threat Modeling**: Don't just check if code "looks right." Systematically consider: token generation strength, token lifecycle, attack surface, rate limiting.
+
+**Maintainability Investment**: One hour refactoring AI-generated code (break functions, rename variables, add comments explaining why) saves months of future confusion.
+
+### Anti-Patterns (Don't Do This)
+
+- "It compiled, so it's correct" — Compilation is not semantic verification
+- "The tests pass" — Tests only verify what they test
+- "I'll understand it later" — Understanding erodes; do it now
+- "This is just like last time" — Similar code can have different behavior
+- "AI knows what I meant" — AI guesses; specify explicitly
+- "It's just internal tooling" — Today's script becomes tomorrow's critical infrastructure
+- "We're moving fast" — Fast without verification is fast toward failure
+- "No one will misuse it" — Assume adversarial use
+- "The senior dev approved it" — Did they verify, or just trust?
+
+### Red Flag Phrases (Suggest Higher Risk Score)
+
+- "This is just a quick fix"
+- "We can patch it later if there's a problem"
+- "No one will probably use this edge case"
+- "The AI seems confident"
+
+---
+
+## Quick Reference Card
+
+```
+IMPACT (I):        1=trivial  2=minor  3=moderate  4=serious  5=critical
+REVERSIBILITY (R): 1=instant  2=easy   3=moderate  4=hard     5=impossible
+EXPOSURE (E):      1=dev only 2=team   3=company   4=external 5=public
+COMPLIANCE (C):    0=none     2=basic  4=moderate   6=significant  8=critical  10=existential
+
+SCORE = (I x 3) + (R x 2) + (E x 2) + C
+
+ 0-10  High Trust      5-10 min    Read, verify intent, automated checks
+11-20  Moderate Trust   15-30 min   + edge cases, basic security, integration
+21-30  Guarded Trust    30-60 min   + adversarial testing, STRIDE, peer review
+31-47  Minimal Trust    1-3 hr      + formal verification, 2+ reviewers, sign-offs
+
+ESCALATE if I/R/E >= 4 OR C >= 6 OR I = 5 (-> Minimal Trust)
+WHEN UNSURE: Round up, verify more
+```
+
+---
+
+## Further Reading
+
+Full chapters are available in this repository for deeper dives:
+
+| Topic | Chapter |
+|-------|---------|
+| The paradigm shift | [Chapter 1: The Inversion](chapters/01-the-inversion.md) |
+| Why existing approaches fall short | [Chapter 2](chapters/02-why-existing-approaches-fall-short.md) |
+| Intent Before Generation | [Chapter 4](chapters/04-principle-one-intent-before-generation.md) |
+| Graduated Trust | [Chapter 5](chapters/05-principle-two-graduated-trust.md) |
+| Understanding Over Acceptance | [Chapter 6](chapters/06-principle-three-understanding-over-acceptance.md) |
+| Provenance Awareness | [Chapter 7](chapters/07-principle-four-provenance-awareness.md) |
+| Continuous Calibration | [Chapter 8](chapters/08-principle-five-continuous-calibration.md) |
+| Intent Specification Practice | [Chapter 9](chapters/09-the-intent-specification-practice.md) |
+| Verification Rituals | [Chapter 10](chapters/10-the-verification-ritual-practice.md) |
+| Learning Loop | [Chapter 11](chapters/11-the-learning-loop-practice.md) |
+| Provenance Hygiene | [Chapter 12](chapters/12-the-provenance-hygiene-practice.md) |
+| For Junior Engineers | [Chapter 13](chapters/13-for-junior-engineers.md) |
+| For Senior Engineers | [Chapter 14](chapters/14-for-senior-engineers.md) |
+| For Teams | [Chapter 15](chapters/15-for-teams-and-organizations.md) |
+| Patterns & Anti-Patterns | [Chapter 19](chapters/19-patterns-and-anti-patterns.md) |
+| Verification Toolkit | [Chapter 20](chapters/20-the-verification-toolkit.md) |
+| Test Verification Framework | [Chapter 21](chapters/21-test-verification-framework.md) |
+| Real-World Examples | [Chapter 22](chapters/22-real-world-examples.md) |
+| Risk Scoring Rubric | [Appendix D](chapters/appendix-d-risk-scoring-rubric.md) |
+| Decision Trees | [Appendix E](chapters/appendix-e-decision-trees.md) |
+| Checklists | [Appendix F](chapters/appendix-f-checklists.md) |
+| Templates | [VID Templates](resources/VID-Templates.md) |
+| Visual Diagrams | [VID Diagrams](resources/VID-Diagrams.md) |
+
+---
+
+*"The developers who thrive in the AI-augmented future will be those who master verification, not just generation."*
