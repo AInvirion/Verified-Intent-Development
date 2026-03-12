@@ -36,7 +36,7 @@
   * [Real-World Examples](chapters/22-real-world-examples.md)
 
 * **Resources**
-  * [AI Reference (llms.txt)](llms.txt)
+  * [AI Reference (llms.txt)](https://vi-development.com/llms.txt ':ignore')
   * [Templates](resources/VID-Templates.md)
   * [Diagrams](resources/VID-Diagrams.md)
 
